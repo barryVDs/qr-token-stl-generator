@@ -1,0 +1,58 @@
+{
+  "export_version": 1,
+  "generated_at": "2026-03-08T21:15:00Z",
+  "batch": {
+    "actie_id": "3b173518-7e9b-4154-8e79-7683beb5f905",
+    "actie_naam": "Dorp spel voorjaar",
+    "preset_name": "Ronde token 50mm",
+    "output_folder_name": "dorp_spel_voorjaar_tokens"
+  },
+  "token_config": {
+    "shape": "round",
+    "size_mm": 50,
+    "thickness_mm": 2.4,
+    "qr_style": "engraved",
+    "qr_height_mm": 0.8,
+    "qr_margin_mm": 2.0,
+    "show_number": true,
+    "number_position": "bottom",
+    "number_style": "engraved",
+    "number_height_mm": 0.6,
+    "number_size_mm": 6.0,
+    "border_enabled": true,
+    "border_mm": 1.2,
+    "corner_radius_mm": 2.0,
+    "hole_enabled": false,
+    "hole_diameter_mm": null,
+    "hole_offset_mm": null
+  },
+  "items": [
+    {
+      "qr_code_id": "077daba1-d825-4744-855b-9961cad6122d",
+      "nummer": 1,
+      "token": "abc123",
+      "url": "https://example.com/q/abc123",
+      "qr_payload": "https://example.com/q/abc123",
+      "png_path": null,
+      "output_name": "token_001"
+    },
+    {
+      "qr_code_id": "f2b1f80d-1e4b-4a7c-9d42-7cfaa85ef001",
+      "nummer": 2,
+      "token": "def456",
+      "url": "https://example.com/q/def456",
+      "qr_payload": "https://example.com/q/def456",
+      "png_path": null,
+      "output_name": "token_002"
+    },
+    {
+      "qr_code_id": "a1c2d3e4-5678-9abc-def0-1234567890ab",
+      "nummer": 3,
+      "token": "ghi789",
+      "url": "https://example.com/q/ghi789",
+      "qr_payload": "https://example.com/q/ghi789",
+      "png_path": null,
+      "output_name": "token_003"
+    }
+  ]
+}

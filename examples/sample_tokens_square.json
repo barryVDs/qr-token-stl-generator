@@ -1,0 +1,49 @@
+{
+  "export_version": 1,
+  "generated_at": "2026-03-08T22:00:00Z",
+  "batch": {
+    "actie_id": "e4a91c2d-3f56-4b78-90ab-cdef12345678",
+    "actie_naam": "Festival zomer",
+    "preset_name": "Vierkante token 40mm met gat",
+    "output_folder_name": "festival_zomer_tokens"
+  },
+  "token_config": {
+    "shape": "square",
+    "size_mm": 40,
+    "thickness_mm": 3.0,
+    "qr_style": "embossed",
+    "qr_height_mm": 0.6,
+    "qr_margin_mm": 1.5,
+    "show_number": true,
+    "number_position": "back",
+    "number_style": "embossed",
+    "number_height_mm": 0.5,
+    "number_size_mm": 5.0,
+    "border_enabled": true,
+    "border_mm": 1.0,
+    "corner_radius_mm": 3.0,
+    "hole_enabled": true,
+    "hole_diameter_mm": 4.0,
+    "hole_offset_mm": 3.0
+  },
+  "items": [
+    {
+      "qr_code_id": "11111111-1111-1111-1111-111111111111",
+      "nummer": 1,
+      "token": "fest001",
+      "url": "https://example.com/q/fest001",
+      "qr_payload": "https://example.com/q/fest001",
+      "png_path": null,
+      "output_name": "festival_001"
+    },
+    {
+      "qr_code_id": "22222222-2222-2222-2222-222222222222",
+      "nummer": 2,
+      "token": "fest002",
+      "url": "https://example.com/q/fest002",
+      "qr_payload": "https://example.com/q/fest002",
+      "png_path": null,
+      "output_name": "festival_002"
+    }
+  ]
+}
