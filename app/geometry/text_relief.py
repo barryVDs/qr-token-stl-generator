@@ -98,6 +98,45 @@ DIGIT_PATTERNS: dict[str, list[str]] = {
 }
 
 
+def get_number_pixels(
+    number: int,
+    center_x: float,
+    center_y: float,
+    char_height_mm: float,
+) -> list[tuple[float, float, float, float]]:
+    """Return list of (x, y, width, height) rectangles for active pixels of a number."""
+    text = str(number)
+    char_width_mm = char_height_mm * 5 / 7
+
+    total_width = len(text) * char_width_mm + (len(text) - 1) * char_width_mm * 0.3
+    start_x = center_x - total_width / 2
+
+    pixels: list[tuple[float, float, float, float]] = []
+    cursor_x = start_x
+
+    for ch in text:
+        pattern = DIGIT_PATTERNS.get(ch)
+        if pattern is None:
+            cursor_x += char_width_mm * 1.3
+            continue
+
+        rows = len(pattern)
+        cols = max(len(row) for row in pattern)
+        pixel_h = char_height_mm / rows
+        pixel_w = char_width_mm / cols
+
+        for r, row in enumerate(pattern):
+            for c, pixel in enumerate(row):
+                if pixel == "#":
+                    px = cursor_x + c * pixel_w
+                    py = center_y + char_height_mm / 2 - r * pixel_h - pixel_h
+                    pixels.append((px, py, pixel_w, pixel_h))
+
+        cursor_x += char_width_mm * 1.3
+
+    return pixels
+
+
 def generate_number_relief_faces(
     number: int,
     center_x: float,

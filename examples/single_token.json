@@ -1,0 +1,40 @@
+{
+  "export_version": 1,
+  "generated_at": "2026-03-08T23:15:00Z",
+  "batch": {
+    "actie_id": "manual-test",
+    "actie_naam": "Enkele test token",
+    "preset_name": "Ronde token 40mm",
+    "output_folder_name": "single_test"
+  },
+  "token_config": {
+    "shape": "round",
+    "size_mm": 40,
+    "thickness_mm": 2.4,
+    "qr_style": "engraved",
+    "qr_height_mm": 0.8,
+    "qr_margin_mm": 2.0,
+    "show_number": true,
+    "number_position": "back",
+    "number_style": "engraved",
+    "number_height_mm": 0.6,
+    "number_size_mm": 6.0,
+    "border_enabled": true,
+    "border_mm": 1.2,
+    "corner_radius_mm": 2.0,
+    "hole_enabled": false,
+    "hole_diameter_mm": null,
+    "hole_offset_mm": null
+  },
+  "items": [
+    {
+      "qr_code_id": "manual-001",
+      "nummer": 1,
+      "token": "fdae81a8",
+      "url": "https://liempdsejong.nl/s/fdae81a845c240bafb380c1bf30414cfa546e0a1131349154d530d57898454e1",
+      "qr_payload": "https://liempdsejong.nl/s/fdae81a845c240bafb380c1bf30414cfa546e0a1131349154d530d57898454e1",
+      "png_path": null,
+      "output_name": "token_001"
+    }
+  ]
+}
