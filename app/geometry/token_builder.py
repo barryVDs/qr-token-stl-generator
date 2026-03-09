@@ -10,6 +10,9 @@ from app.geometry.text_relief import get_number_pixels
 
 logger = logging.getLogger(__name__)
 
+# Maximum cell size for smooth boundaries (mm)
+MAX_CELL_SIZE = 0.2
+
 
 def build_token_mesh(
     config: TokenConfig,
@@ -23,22 +26,38 @@ def build_token_mesh(
     """
     qr_rows, qr_cols = qr_matrix.shape
 
-    # Compute available QR area
-    qr_area = config.size_mm - 2 * config.qr_margin_mm
-    if config.border_enabled:
-        qr_area -= 2 * config.border_mm
+    # --- Compute QR side length ---
+    if config.shape == Shape.ROUND:
+        # For round tokens: QR diagonal must fit inside the circle.
+        # qr_margin_mm = clearance between token edge and QR corner along diagonal.
+        # QR_diagonal = diameter - 2 * margin
+        # QR_side = QR_diagonal / sqrt(2)
+        qr_diagonal = config.size_mm - 2 * config.qr_margin_mm
+        qr_side = qr_diagonal / math.sqrt(2)
+    else:
+        qr_side = config.size_mm - 2 * config.qr_margin_mm
+        if config.border_enabled:
+            qr_side -= 2 * config.border_mm
 
     # Shift QR center if number is on the front side
     qr_center_y = 0.0
     if config.show_number and config.number_position == NumberPosition.BOTTOM:
         qr_center_y += (config.number_size_mm + 1.0) / 2
-        qr_area -= config.number_size_mm + 1.0
+        qr_side -= config.number_size_mm + 1.0
     elif config.show_number and config.number_position == NumberPosition.TOP:
         qr_center_y -= (config.number_size_mm + 1.0) / 2
-        qr_area -= config.number_size_mm + 1.0
+        qr_side -= config.number_size_mm + 1.0
 
-    module_size = qr_area / max(qr_rows, qr_cols)
-    cell_size = module_size
+    module_size = qr_side / max(qr_rows, qr_cols)
+
+    # Use fine grid for smooth boundaries, subdivide modules if needed
+    subdivisions = max(1, math.ceil(module_size / MAX_CELL_SIZE))
+    cell_size = module_size / subdivisions
+
+    logger.info(
+        "QR: %dx%d modules, module=%.2fmm, cell=%.2fmm (sub=%d), qr_side=%.1fmm",
+        qr_cols, qr_rows, module_size, cell_size, subdivisions, qr_side,
+    )
 
     # QR boundaries in model space
     qr_width = qr_cols * module_size
@@ -209,7 +228,6 @@ def _heightmap_to_mesh(
             # Left edge (-X)
             if not l_in:
                 _wall_nx(faces, x0, y0, y1, zb, zt)
-            # (height transitions handled by left neighbor's right-edge check)
 
             # Up edge (+Y)
             if not u_in:
@@ -229,33 +247,27 @@ def _heightmap_to_mesh(
             # Down edge (-Y)
             if not d_in:
                 _wall_ny(faces, y0, x0, x1, zb, zt)
-            # (height transitions handled by lower neighbor's up-edge check)
 
     return faces
 
 
 # --- Wall helpers with verified outward normals ---
-# All normals verified via cross product of edge vectors.
 
 def _wall_px(faces: list, x: float, y0: float, y1: float, z0: float, z1: float) -> None:
-    """Wall at x facing +X."""
     faces.append([[x, y0, z0], [x, y1, z0], [x, y0, z1]])
     faces.append([[x, y1, z0], [x, y1, z1], [x, y0, z1]])
 
 
 def _wall_nx(faces: list, x: float, y0: float, y1: float, z0: float, z1: float) -> None:
-    """Wall at x facing -X."""
     faces.append([[x, y0, z0], [x, y0, z1], [x, y1, z0]])
     faces.append([[x, y1, z0], [x, y0, z1], [x, y1, z1]])
 
 
 def _wall_py(faces: list, y: float, x0: float, x1: float, z0: float, z1: float) -> None:
-    """Wall at y facing +Y."""
     faces.append([[x0, y, z0], [x0, y, z1], [x1, y, z0]])
     faces.append([[x1, y, z0], [x0, y, z1], [x1, y, z1]])
 
 
 def _wall_ny(faces: list, y: float, x0: float, x1: float, z0: float, z1: float) -> None:
-    """Wall at y facing -Y."""
     faces.append([[x0, y, z0], [x1, y, z0], [x0, y, z1]])
     faces.append([[x1, y, z0], [x1, y, z1], [x0, y, z1]])

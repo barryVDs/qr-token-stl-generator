@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Optional
 
@@ -12,6 +13,26 @@ app = typer.Typer(
     help="Generate 3D printable STL files for QR code tokens from JSON export.",
     add_completion=False,
 )
+
+PRESETS_DIR = Path(__file__).parent.parent / "presets"
+
+
+def _load_preset(preset_name: str) -> dict:
+    preset_path = PRESETS_DIR / f"{preset_name}.json"
+    if not preset_path.exists():
+        available = [p.stem for p in PRESETS_DIR.glob("*.json")] if PRESETS_DIR.exists() else []
+        msg = f"Preset '{preset_name}' not found."
+        if available:
+            msg += f" Available: {', '.join(available)}"
+        raise typer.BadParameter(msg)
+    return json.loads(preset_path.read_text(encoding="utf-8"))
+
+
+def _apply_preset(raw: dict, preset_name: str) -> dict:
+    preset = _load_preset(preset_name)
+    if "token_config" in preset:
+        raw["token_config"] = preset["token_config"]
+    return raw
 
 
 @app.command()
@@ -43,9 +64,10 @@ def validate(
 def generate(
     input: Path = typer.Option(..., "--input", "-i", help="Path to input JSON file"),
     output: Path = typer.Option(..., "--output", "-o", help="Output directory for STL files"),
+    preset: Optional[str] = typer.Option(None, "--preset", "-p", help="Preset name from presets/ folder"),
     zip: bool = typer.Option(False, "--zip", "-z", help="Create a zip of all STL files"),
     limit: Optional[int] = typer.Option(None, "--limit", "-l", help="Limit number of items to process"),
-    preview: bool = typer.Option(False, "--preview", "-p", help="Generate preview PNG images"),
+    preview: bool = typer.Option(False, "--preview", help="Generate preview PNG images"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose logging"),
 ) -> None:
     """Generate STL files from a token export JSON file."""
@@ -58,7 +80,19 @@ def generate(
 
     logger = logging.getLogger(__name__)
 
-    export, result = load_and_validate(input)
+    if preset:
+        raw = json.loads(input.read_text(encoding="utf-8"))
+        raw = _apply_preset(raw, preset)
+        from app.models import TokenExport
+        from app.validator import ValidationResult
+        try:
+            export = TokenExport(**raw)
+            result = ValidationResult()
+        except Exception as e:
+            typer.echo(f"  ERROR: {e}", err=True)
+            raise typer.Exit(code=1)
+    else:
+        export, result = load_and_validate(input)
 
     for w in result.warnings:
         typer.echo(f"  WARNING: {w}", err=True)
@@ -70,6 +104,8 @@ def generate(
 
     typer.echo(f"Processing {len(export.items)} items "
                f"({export.token_config.shape.value} {export.token_config.size_mm}mm)...")
+    if preset:
+        typer.echo(f"Using preset: {preset}")
 
     batch_result = generate_batch(export, output, limit=limit)
 
