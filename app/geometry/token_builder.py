@@ -81,13 +81,18 @@ def build_token_mesh(
             y1 = y0 + module_size
 
             if config.qr_style == ReliefStyle.EMBOSSED:
-                z_bot = config.thickness_mm
-                z_top = config.thickness_mm + config.qr_height_mm
+                faces.extend(_closed_box(
+                    x0, y0, x1, y1,
+                    config.thickness_mm,
+                    config.thickness_mm + config.qr_height_mm,
+                ))
             else:
-                z_bot = config.thickness_mm - config.qr_height_mm
-                z_top = config.thickness_mm
-
-            faces.extend(_closed_box(x0, y0, x1, y1, z_bot, z_top))
+                # Engraved: subtract box from cylinder top using inverted normals
+                faces.extend(_closed_box_inverted(
+                    x0, y0, x1, y1,
+                    config.thickness_mm - config.qr_height_mm,
+                    config.thickness_mm + 0.01,
+                ))
 
     # ── 4. Number relief ──
     if config.show_number:
@@ -96,12 +101,16 @@ def build_token_mesh(
             pixels = [(-px - pw, py, pw, ph) for px, py, pw, ph in pixels]
             for px, py, pw, ph in pixels:
                 if config.number_style == ReliefStyle.EMBOSSED:
-                    z_bot = -config.number_height_mm
-                    z_top = 0.0
+                    faces.extend(_closed_box(
+                        px, py, px + pw, py + ph,
+                        -config.number_height_mm, 0.0,
+                    ))
                 else:
-                    z_bot = 0.0
-                    z_top = config.number_height_mm
-                faces.extend(_closed_box(px, py, px + pw, py + ph, z_bot, z_top))
+                    # Engraved on back: subtract from bottom
+                    faces.extend(_closed_box_inverted(
+                        px, py, px + pw, py + ph,
+                        -0.01, config.number_height_mm,
+                    ))
         else:
             margin = max(config.border_mm, config.qr_margin_mm)
             if config.number_position == NumberPosition.BOTTOM:
@@ -111,12 +120,17 @@ def build_token_mesh(
             pixels = get_number_pixels(nummer, 0.0, num_y, config.number_size_mm)
             for px, py, pw, ph in pixels:
                 if config.number_style == ReliefStyle.EMBOSSED:
-                    z_bot = config.thickness_mm
-                    z_top = config.thickness_mm + config.number_height_mm
+                    faces.extend(_closed_box(
+                        px, py, px + pw, py + ph,
+                        config.thickness_mm,
+                        config.thickness_mm + config.number_height_mm,
+                    ))
                 else:
-                    z_bot = config.thickness_mm - config.number_height_mm
-                    z_top = config.thickness_mm
-                faces.extend(_closed_box(px, py, px + pw, py + ph, z_bot, z_top))
+                    faces.extend(_closed_box_inverted(
+                        px, py, px + pw, py + ph,
+                        config.thickness_mm - config.number_height_mm,
+                        config.thickness_mm + 0.01,
+                    ))
 
     logger.info("Built token mesh: %d faces", len(faces))
     return np.array(faces, dtype=np.float64)
@@ -178,6 +192,30 @@ def _closed_box(x0, y0, x1, y1, z_bot, z_top):
         # Left (-X)
         [[x0, y0, z_bot], [x0, y0, z_top], [x0, y1, z_bot]],
         [[x0, y1, z_bot], [x0, y0, z_top], [x0, y1, z_top]],
+    ]
+
+
+def _closed_box_inverted(x0, y0, x1, y1, z_bot, z_top):
+    """Watertight box with all normals pointing INWARD — used to subtract material."""
+    return [
+        # Top (-Z, inverted)
+        [[x0, y0, z_top], [x0, y1, z_top], [x1, y0, z_top]],
+        [[x1, y0, z_top], [x0, y1, z_top], [x1, y1, z_top]],
+        # Bottom (+Z, inverted)
+        [[x0, y0, z_bot], [x1, y0, z_bot], [x0, y1, z_bot]],
+        [[x1, y0, z_bot], [x1, y1, z_bot], [x0, y1, z_bot]],
+        # Front (-Y, inverted)
+        [[x0, y1, z_bot], [x1, y1, z_bot], [x0, y1, z_top]],
+        [[x1, y1, z_bot], [x1, y1, z_top], [x0, y1, z_top]],
+        # Back (+Y, inverted)
+        [[x0, y0, z_bot], [x0, y0, z_top], [x1, y0, z_bot]],
+        [[x1, y0, z_bot], [x0, y0, z_top], [x1, y0, z_top]],
+        # Right (-X, inverted)
+        [[x1, y0, z_bot], [x1, y0, z_top], [x1, y1, z_bot]],
+        [[x1, y1, z_bot], [x1, y0, z_top], [x1, y1, z_top]],
+        # Left (+X, inverted)
+        [[x0, y0, z_bot], [x0, y1, z_bot], [x0, y0, z_top]],
+        [[x0, y1, z_bot], [x0, y1, z_top], [x0, y0, z_top]],
     ]
 
 
